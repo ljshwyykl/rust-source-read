@@ -237,21 +237,32 @@ fn main() {
     let cache = !matches.is_present("nocache");
     // 禁用 header::Range
     let range = !matches.is_present("norange");
+    // TLS/SSL 证书
     let cert = matches.value_of("cert");
+    // TLS/SSL 证书密码
     let certpass = matches.value_of("certpass");
+    // 启用 Access-Control-Allow-Origin
     let cors = matches.is_present("cors");
+    // 绑定Ip
     let ip = matches.value_of("ip").unwrap();
+    // 绑定端口
     let port = matches.value_of("port").unwrap().parse::<u16>().unwrap();
+    // 上传文件大小限制
     let upload_size_limit = matches
         .value_of("upload_size_limit")
         .unwrap()
         .parse::<u64>()
         .unwrap();
+    //开启auth HTTP Basic Auth (username:password)   
     let auth = matches.value_of("auth");
+    // 开启 gzip/deflate
     let compress = matches.values_of_lossy("compress");
+    // 开启多线程
     let threads = matches.value_of("threads").unwrap().parse::<u8>().unwrap();
+    // 自定义404文件
     let try_file_404 = matches.value_of("try-file-404");
 
+    // new Printer
     let printer = Printer::new();
     let color_blue = Some(build_spec(Some(Color::Blue), false));
     let color_red = Some(build_spec(Some(Color::Red), false));
@@ -262,12 +273,14 @@ fn main() {
         .iter()
         .map(|s| format!("*.{}", s))
         .collect::<Vec<String>>();
+
     let compression_string = if compression_exts.is_empty() {
         "disabled".to_owned()
     } else {
         format!("{:?}", compression_exts)
     };
 
+    // 是否自动打开浏览器
     let open = matches.is_present("open");
 
     if open {
@@ -279,8 +292,10 @@ fn main() {
         }
     }
 
+    // 是否禁用所有输出
     let silent = matches.is_present("silent");
 
+    // 是否启用上传文件
     let upload: Option<Upload> = if upload_arg {
         let token: String = thread_rng()
             .sample_iter(&Alphanumeric)
@@ -342,6 +357,7 @@ fn main() {
             )
             .unwrap();
     }
+
 
     let mut chain = Chain::new(MainHandler {
         root,
@@ -423,6 +439,7 @@ struct Upload {
     csrf_token: String,
 }
 
+/// MainHandler struct
 struct MainHandler {
     root: PathBuf,
     index: bool,
@@ -436,9 +453,12 @@ struct MainHandler {
     upload_size_limit: u64,
 }
 
+/// 实现 Handler
 impl Handler for MainHandler {
     fn handle(&self, req: &mut Request) -> IronResult<Response> {
+        // 得到根目录
         let mut fs_path = self.root.clone();
+        // 重定向
         if let Some(url) = &self.redirect_to {
             return Ok(Response::with((
                 status::PermanentRedirect,
@@ -514,6 +534,7 @@ impl Handler for MainHandler {
 }
 
 impl MainHandler {
+    /// 保存上传的文件
     fn save_files(
         &self,
         req: &mut Request,
@@ -601,6 +622,7 @@ impl MainHandler {
         }
     }
 
+    /// 目录下面所有的文件目录
     fn list_directory(
         &self,
         req: &mut Request,
@@ -618,8 +640,10 @@ impl MainHandler {
 
         let read_dir = fs::read_dir(&fs_path).map_err(error_io2iron)?;
         let mut entries = Vec::new();
+        // 遍历当前目录
         for entry_result in read_dir {
             let entry = entry_result.map_err(error_io2iron)?;
+            // 文件信息
             entries.push(Entry {
                 filename: entry.file_name().into_string().unwrap(),
                 metadata: entry.metadata().map_err(error_io2iron)?,

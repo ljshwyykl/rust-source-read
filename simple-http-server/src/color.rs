@@ -1,3 +1,5 @@
+//! 自定义终端color
+
 use std::io::Write;
 
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, WriteColor};

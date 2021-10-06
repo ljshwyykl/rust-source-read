@@ -46,6 +46,7 @@ impl Deref for StringError {
     }
 }
 
+/// 根据 true || false ,返回enabled || disabled
 pub fn enable_string(value: bool) -> String {
     (if value { "enabled" } else { "disabled" }).to_owned()
 }
